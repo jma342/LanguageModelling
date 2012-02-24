@@ -15,7 +15,8 @@ public class Ngrams {
 	 */
 	
 	//pass in instances of the bigram and unigram
-	public static void BuildModels(String[] toks, Bigrams bg, Unigrams ug){
+	public static void BuildModels(String[] toks, Bigrams bg, Unigrams ug)
+	{
 	}
 	//help
 	//helper function called by "build models"
@@ -39,10 +40,13 @@ public class Ngrams {
 			if (bg.containsBg(last, cur)) 
 			{
 				bg.updateSeen(last, cur);
-				ug.updateSeen(cur);}
+				ug.updateSeen(cur);
+			}
 			
 			 	//2) word seen, but not bigram
-				else if (ug.contains(cur)) 
+			else
+			{
+				if (ug.contains(cur)) 
 				{
 					bg.addNew(last, cur);
 					ug.updateSeen(cur);
@@ -89,7 +93,7 @@ public class Ngrams {
 		//TODO: Random sentence generator
 	}
 	
-	public static Bigrams smoothBg(Bigrams bgs, Unigrams ugs) {
+	/*public static Bigrams smoothBg(Bigrams bgs, Unigrams ugs) {
 		//TODO: Good-Turing smoothing method
 		//vector<int> countUGram = new Vector<int>;
 
@@ -118,7 +122,7 @@ public class Ngrams {
 			System.out.println(i + ": " + countBGram[i]);
 		
 		
-	}
+	}*/
 	
 	//tricky question of inhereitence here-- what class for the arguement? model class?
 	public static void findPerplexity(String[] testToks) {
