@@ -17,7 +17,7 @@ public class Ngrams {
 	//pass in instances of the bigram and unigram
 	public static void BuildModels(String[] toks, Bigrams bg, Unigrams ug){
 	}
-	
+	//help
 	//helper function called by "build models"
 	public static void indexBg(String[] toks, Bigrams bg, Unigrams ug)
 	{
