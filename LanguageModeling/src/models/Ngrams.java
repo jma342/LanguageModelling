@@ -15,7 +15,8 @@ public class Ngrams {
 	 */
 	
 	//pass in instances of the bigram and unigram
-	public static void BuildModels(String[] toks, Bigrams bg, Unigrams ug){
+	public static void BuildModels(String[] toks, Bigrams bg, Unigrams ug)
+	{
 	}
 
 	/*
@@ -48,6 +49,7 @@ public class Ngrams {
 				   bg.addNew(loopBg); } 
 			     }
 			  last= cur;
+
 		} // end loop
 	}
 
@@ -77,36 +79,37 @@ public class Ngrams {
 		//TODO: Random sentence generator
 	}
 	
-//	public static Bigrams smoothBg(Bigrams bgs, Unigrams ugs) {
-//		//TODO: Good-Turing smoothing method
-//		//vector<int> countUGram = new Vector<int>;
-//
-//		int[] countUGram = new int[ugs.size()];
-//		int[] countBGram = new int[bgs.size()];
-//		
-//		Arrays.fill(countUGram, 0);
-//		Arrays.fill(countBGram, 0);
-//		
-//		for (String uGram: ugs.getAll()) {
-//			int idx = ugs.getCount(uGram);
-//		countUGram[idx]++;
-//		}
-//		
-//		for (Pair<String, String> bGram: bgs.getAll()) {
-//		int idx = bgs.getBgCount(bGram.getFirst(), bGram.getSec());
-//			countBGram[idx]++;
-//		}
-//		
-//		System.out.println("UGram Count:");
-//		for (int i = 0; i < countUGram.length; i++)
-//			System.out.println(i + ": " + countUGram[i]);
-//		
-//		System.out.println("BGram Count:");
-//		for (int i = 0; i < countBGram.length; i++)
-//			System.out.println(i + ": " + countBGram[i]);
-//		
-//		
-//	}
+
+	/*public static Bigrams smoothBg(Bigrams bgs, Unigrams ugs) {
+		//TODO: Good-Turing smoothing method
+		//vector<int> countUGram = new Vector<int>;
+
+		int[] countUGram = new int[ugs.size()];
+		int[] countBGram = new int[bgs.size()];
+		
+		Arrays.fill(countUGram, 0);
+		Arrays.fill(countBGram, 0);
+		
+		for (String uGram: ugs.getAll()) {
+			int idx = ugs.getCount(uGram);
+			countUGram[idx]++;
+		}
+		
+		for (Pair<String, String> bGram: bgs.getAll()) {
+			int idx = bgs.getBgCount(bGram.getFirst(), bGram.getSec());
+			countBGram[idx]++;
+		}
+		
+		System.out.println("UGram Count:");
+		for (int i = 0; i < countUGram.length; i++)
+			System.out.println(i + ": " + countUGram[i]);
+		
+		System.out.println("BGram Count:");
+		for (int i = 0; i < countBGram.length; i++)
+			System.out.println(i + ": " + countBGram[i]);
+		
+		
+	}*/
 	
 	//tricky question of inhereitence here-- what class for the arguement? model class?
 	public static void findPerplexity(String[] testToks) {
