@@ -1,0 +1,2 @@
+This text I'm now writing is meant to be used as a test to get the parsing strings right. So I will abrev. a couple of different things, namely the monthe Nov. and the title of Mr. and Mrs. Smith.
+Hopefully this spacing is ok.  If not, that's no good. Create the model yo!
