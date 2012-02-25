@@ -37,9 +37,16 @@ public class Pair<F, S> {
 	   return (37 * first.hashCode() + 13 * second.hashCode() + 23);
    }
 	
-   public boolean equals(Pair<F,S> p) {
-	   return ((first.equals(p.getFirst())) && (second.equals(p.getSec())));
-   }
+   public boolean equals(Object o) { 
+	   System.out.println("in equals()");
+	   if (o instanceof Pair) { 
+	     Pair<?, ?> p1 = (Pair<?, ?>) o;
+	     if ( p1.first.equals( this.first ) && p1.second.equals( this.second ) ) { 
+	       return(true);
+	     }
+	   }
+	   return(false);
+	 }
    
    public static void main(String[] args){
 	   Pair<String, String> s1 = new Pair<String, String>("hi", "there");
