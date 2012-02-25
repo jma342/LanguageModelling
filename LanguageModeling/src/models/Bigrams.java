@@ -19,20 +19,6 @@ public class Bigrams {
 	 public Map<Pair<String, String>, Pair<Integer, Double>> bigramHT = new HashMap<Pair<String, String>, Pair<Integer, Double>>();
 	 public Map<String, HashSet<Pair<String, String>>> prefixHT = new HashMap<String, HashSet<Pair<String, String>>>();
 	 
-<<<<<<< HEAD
-	 public int getBgCount(String pre, String w) {
-		 Pair<String, String> bgkey = new Pair<String, String>(pre, w);
-		 
-		 int count = 0;
-		 
-		 if (bigramHT.containsKey(bgkey)){
-			 count = bigramHT.get(bgkey).getFirst();
-			 //System.out.println("+++count for: " + bgkey.toString() + " is " + count);
-		 }
-		 else { 
-			 //System.out.println("*** Strange, no count reported for: " + bgkey.toString());
-			 count = 1;
-=======
 	 //return 0 if bigram is not in the table
 	 public int getBgCount(Pair<String, String> bg){
 		 int count;
@@ -40,7 +26,6 @@ public class Bigrams {
 		 count= bigramHT.get(bg).getFirst();}
 		 else{ System.out.println(bg.toString() + "has not been seen, no value stored for count");
 		 count= 0;
->>>>>>> branch 'master' of ssh://git@github.com/jma342/LanguageModelling.git
 		 }
 		 return count;
 	 }
@@ -55,27 +40,7 @@ public class Bigrams {
 		all.addAll(bigramHT.keySet());
 		return all;
 	}
-	
-<<<<<<< HEAD
-	 public void updateSeen(String pre, String w) {
-		 Pair<String, String> bgkey = new Pair<String, String>( pre, w);
-		 int count;
-		 double freq;
-		 
-		 try{ 
-			 count = bigramHT.get(bgkey).getFirst() + 1;
-			 freq = bigramHT.get(bgkey).getSec();
-		 }
-		 catch (NullPointerException e) {
-			 //System.out.println("values not set for (" + pre + "," + w + ")");
-			 count = 1;
-			 freq = 0.0;
-		 }
-		 
-		 Pair<Integer, Double> bgVal= new Pair<Integer, Double>(count, freq);
-		 bigramHT.put(bgkey, bgVal);			 
-	 }
-=======
+
 	//if bg not stored, does not update
 	public void updateSeen(Pair<String, String> bg) {
 		int count;
@@ -89,7 +54,6 @@ public class Bigrams {
 			System.out.println("update failed because could not find entry");
 		}
 	}
->>>>>>> branch 'master' of ssh://git@github.com/jma342/LanguageModelling.git
 	 
 	 public void addNew(Pair<String, String> bg){
 		 if (bigramHT.containsKey(bg)){  this.updateSeen(bg);
@@ -99,17 +63,10 @@ public class Bigrams {
 		 Pair<Integer, Double> bgVal= new Pair<Integer, Double>();
 		 bgVal.setFirst((Integer) 1);
 		 bgVal.setSec((Double) 0.0);
-<<<<<<< HEAD
-		 
-		 //System.out.println(bigramHT.put(bgkey, bgVal));
-		 //System.out.println(bigramHT.get(bgkey).toString());
-		 
-		 this.addToPrfx(pre, w);
-=======
+
 		 System.out.println(bigramHT.put(bg, bgVal));
 		 System.out.println(bigramHT.get(bg).toString());
 		 this.addToPrfx(bg);
->>>>>>> branch 'master' of ssh://git@github.com/jma342/LanguageModelling.git
 	 }
 	
 	//merely sets frequency entry for bigram entry, does not calculate. N-grams caculates frequencies
@@ -140,17 +97,6 @@ public class Bigrams {
 	 public Boolean containsBg(Pair<String, String> bg){
 		 return bigramHT.containsKey(bg);
 	 }
-<<<<<<< HEAD
-	 
-	 public static void main(String [ ] args) {
-		 //Bigrams t = new Bigrams();
-		 //t.addNew("this", "walk");
-		 //t.updateSeen("this", "walk");
-		 
-		 //System.out.println(t.getBgCount("this" ,"walk"));
-	 }
-	 
-=======
+
 	 	 
->>>>>>> branch 'master' of ssh://git@github.com/jma342/LanguageModelling.git
 }

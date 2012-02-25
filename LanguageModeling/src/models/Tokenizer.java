@@ -105,5 +105,20 @@ public class Tokenizer
 		return tokens;
 		
 	}
+	
+	/*public static void main(String[] args)
+	{
+		Tokenizer tok = new Tokenizer();
+		Vector<String> tokens = new Vector<String>();
+		tokens = tok.tokenize("wsj.train");
+		
+		for(int count = 0;count < tokens.size();count++)
+		{
+			System.out.println(tokens.elementAt(count));
+		}
+		
+		
+	}*/
 
 }
+
