@@ -27,10 +27,10 @@ public class Bigrams {
 		 
 		 if (bigramHT.containsKey(bgkey)){
 			 count = bigramHT.get(bgkey).getFirst();
-			 System.out.println("+++count for: " + bgkey.toString() + " is " + count);
+			 //System.out.println("+++count for: " + bgkey.toString() + " is " + count);
 		 }
 		 else { 
-			 System.out.println("*** Strange, no count reported for: " + bgkey.toString());
+			 //System.out.println("*** Strange, no count reported for: " + bgkey.toString());
 			 count = 1;
 		 }
 		 return count;
@@ -58,7 +58,7 @@ public class Bigrams {
 			 freq = bigramHT.get(bgkey).getSec();
 		 }
 		 catch (NullPointerException e) {
-			 System.out.println("values not set for (" + pre + "," + w + ")");
+			 //System.out.println("values not set for (" + pre + "," + w + ")");
 			 count = 1;
 			 freq = 0.0;
 		 }
@@ -79,8 +79,8 @@ public class Bigrams {
 		 bgVal.setFirst((Integer) 1);
 		 bgVal.setSec((Double) 0.0);
 		 
-		 System.out.println(bigramHT.put(bgkey, bgVal));
-		 System.out.println(bigramHT.get(bgkey).toString());
+		 //System.out.println(bigramHT.put(bgkey, bgVal));
+		 //System.out.println(bigramHT.get(bgkey).toString());
 		 
 		 this.addToPrfx(pre, w);
 	 }
@@ -121,11 +121,11 @@ public class Bigrams {
 	 }
 	 
 	 public static void main(String [ ] args) {
-		 Bigrams t = new Bigrams();
-		 t.addNew("this", "walk");
+		 //Bigrams t = new Bigrams();
+		 //t.addNew("this", "walk");
 		 //t.updateSeen("this", "walk");
 		 
-		 System.out.println(t.getBgCount("this" ,"walk"));
+		 //System.out.println(t.getBgCount("this" ,"walk"));
 	 }
 	 
 }

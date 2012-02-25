@@ -24,7 +24,7 @@ public class Unigrams {
 			return count;
 		}
 		 
-		System.out.println("***strange, :" + w + ": doesn't have a count");
+		//System.out.println("***strange, :" + w + ": doesn't have a count");
 		return 1;
 	}
 	 
@@ -49,7 +49,7 @@ public class Unigrams {
 			freq = unigramHT.get(w).getSec();
 		}
 		catch (NullPointerException e) {
-			System.out.println("No count values stored for " + w);
+			//System.out.println("No count values stored for " + w);
 			count = 1;
 			freq = 0;
 		}
@@ -66,7 +66,7 @@ public class Unigrams {
 			count= unigramHT.get(w).getFirst();
 		}
 		catch (NullPointerException e) {
-			System.out.println("****Error for " + w + " in freq setting");
+			//System.out.println("****Error for " + w + " in freq setting");
 			count = 1;
 		}
 		ugVal = new Pair<Integer, Double>(count, fre);

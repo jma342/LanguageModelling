@@ -9,12 +9,17 @@
 
 package models;
 
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Vector;
+
 public class Ngrams {
 	/**
 	 * @param args
 	 */
 	
-	//pass in instances of the bigram and unigram
+	//pass in instances of th bigram and unigram
 	public static void BuildModels(String[] toks, Bigrams bg, Unigrams ug){
 	}
 	//help
@@ -34,51 +39,50 @@ public class Ngrams {
 		for (int i = 1; i < tlength; i++) 
 		{
 			cur = toks[i];
-			
+				
 			//three cases. 1) bigram has been seen
 			if (bg.containsBg(last, cur)) 
 			{
 				bg.updateSeen(last, cur);
-				ug.updateSeen(cur);}
-			
-			 	//2) word seen, but not bigram
-				else if (ug.contains(cur)) 
+				ug.updateSeen(cur);
+			}
+			else {
+				// 2) word seen, but not bigram
+				if (ug.contains(cur)) 
 				{
 					bg.addNew(last, cur);
 					ug.updateSeen(cur);
 				}
-			
-			  	//3) new word entirely
+				// 3) new word entirely
 				else 
 				{
 					ug.addNew(cur);
 					bg.addNew(last, cur);
-				} 
+				}
 			}
-		
-			last= cur;
+			last = cur;
 		} // end loop
 	}
 	
 	public static void setFreqs(int tokSize, Bigrams bgs, Unigrams ugs) {
 		//set unigram HT entries for frequency, calculated by normalzing UG count by number of tokens
-		for (String uGram: ugs.getAll()){
+		for (String uGram: ugs.getAll()) {
 			int ucount = ugs.getCount(uGram);
 			double ufreq = ((double)ucount/tokSize);
 			ugs.setFreq(uGram, ufreq);
 		}
 		
 		//test print
-		for(Pair<String, String> bGram: bgs.getAll()) {
+		/*for(Pair<String, String> bGram: bgs.getAll()) {
 			System.out.println(bGram.toString());
-		}
+		}*/
 		
 		//set bigram HT entries for frequency, calculated by normalizing BG count by prefix count
 		for(Pair<String, String> bGram: bgs.getAll()) {
 			int bcount = bgs.getBgCount(bGram.getFirst(), bGram.getSec());
 			int pcount = ugs.getCount(bGram.getFirst()); //sets p count to count of prefix from unigram table
 			
-			System.out.println("bigram count for "+ bGram.toString() + " is: "+ bcount+ ". And prefix, \""+ bGram.getFirst() + "\", count is: " + pcount);
+//			System.out.println("bigram count for "+ bGram.toString() + " is: "+ bcount+ ". And prefix, \""+ bGram.getFirst() + "\", count is: " + pcount);
 			
 			double bfreq = ((double)bcount/(double)pcount);
 			bgs.setFreq(bGram.getFirst(), bGram.getSec(), bfreq);
@@ -89,37 +93,43 @@ public class Ngrams {
 		//TODO: Random sentence generator
 	}
 	
-	public static Bigrams smoothBg(Bigrams bgs, Unigrams ugs) {
-		//TODO: Good-Turing smoothing method
-		//vector<int> countUGram = new Vector<int>;
-
-		int[] countUGram = new int[ugs.size()];
-		int[] countBGram = new int[bgs.size()];
+	// Good-Turing smoothing method for unigrams
+	public static void smooth(Unigrams ugs) {
 		
-		Arrays.fill(countUGram, 0);
-		Arrays.fill(countBGram, 0);
+		HashMap<Integer, Double> unigramCount = new HashMap<Integer, Double>();
+		
+		double totalCount = 0; 
+		
+		for (String uGram: ugs.getAll())
+			totalCount += ugs.getCount(uGram);
 		
 		for (String uGram: ugs.getAll()) {
-			int idx = ugs.getCount(uGram);
-			countUGram[idx]++;
+			int count = ugs.getCount(uGram);
+			
+			if (!unigramCount.containsKey(count)) {
+				unigramCount.put(new Integer(count), new Double(1));
+			}
+			else {
+				Double newCount = unigramCount.get(new Integer(count));
+				unigramCount.put(new Integer(count), newCount + 1);
+			}
 		}
 		
-		for (Pair<String, String> bGram: bgs.getAll()) {
-			int idx = bgs.getBgCount(bGram.getFirst(), bGram.getSec());
-			countBGram[idx]++;
+		Double k = new Double(1 / totalCount);
+		
+		for (String uGram: ugs.getAll()) {
+			int count = ugs.getCount(uGram);
+			
+			Double Pgt = k * unigramCount.get(new Integer(count));
+			ugs.setFreq(uGram, Pgt);
 		}
-		
-		System.out.println("UGram Count:");
-		for (int i = 0; i < countUGram.length; i++)
-			System.out.println(i + ": " + countUGram[i]);
-		
-		System.out.println("BGram Count:");
-		for (int i = 0; i < countBGram.length; i++)
-			System.out.println(i + ": " + countBGram[i]);
-		
 		
 	}
-	
+
+	public static void smooth(Bigrams ugs) {
+		//TODO: Good-Turing Smoothing method for bigrams
+	}
+
 	//tricky question of inhereitence here-- what class for the arguement? model class?
 	public static void findPerplexity(String[] testToks) {
 		//TODO: Perplexity implementation
@@ -143,7 +153,7 @@ public class Ngrams {
 
 		indexBg(toks, bgs, ugs);
 		
-		for(String p: ugs.unigramHT.keySet()) {
+		/*for(String p: ugs.unigramHT.keySet()) {
 			System.out.print(p);
 			System.out.println(ugs.getCount(p));
 		}
@@ -159,7 +169,9 @@ public class Ngrams {
 		
 		for(Pair<Integer, Double> p: bgs.bigramHT.values()) {
 			System.out.println(p.getFirst()+ " , freq: "+ p.getSec());
-		}		
+		}*/
+		
+		smoothBg(bgs, ugs);
 	}
 
 }
