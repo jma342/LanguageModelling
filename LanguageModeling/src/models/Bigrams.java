@@ -40,7 +40,9 @@ public class Bigrams {
 		all.addAll(bigramHT.keySet());
 		return all;
 	}
-	
+
+
+
 	//if bg not stored, does not update
 	public void updateSeen(Pair<String, String> bg) {
 		int count;
@@ -63,6 +65,9 @@ public class Bigrams {
 		 Pair<Integer, Double> bgVal= new Pair<Integer, Double>();
 		 bgVal.setFirst((Integer) 1);
 		 bgVal.setSec((Double) 0.0);
+
+
+
 		 System.out.println(bigramHT.put(bg, bgVal));
 		 System.out.println(bigramHT.get(bg).toString());
 		 this.addToPrfx(bg);
@@ -96,5 +101,8 @@ public class Bigrams {
 	 public Boolean containsBg(Pair<String, String> bg){
 		 return bigramHT.containsKey(bg);
 	 }
+
+
+
 	 	 
 }

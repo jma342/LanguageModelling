@@ -106,13 +106,20 @@ public class Tokenizer
 		
 	}
 	
-	public static void main(String[] args) {
-  		Tokenizer tok= new Tokenizer();
-  		Vector<String> testV= tok.tokenize("wsj.train");
-  		for (int count = 0;count < testV.size();count++)
-  		{
-  			System.out.println(testV.elementAt(count));
-  		}
-	}	
+
+	/*public static void main(String[] args)
+	{
+		Tokenizer tok = new Tokenizer();
+		Vector<String> tokens = new Vector<String>();
+		tokens = tok.tokenize("wsj.train");
+		
+		for(int count = 0;count < tokens.size();count++)
+		{
+			System.out.println(tokens.elementAt(count));
+		}
+		
+		
+	}*/
 
 }
+
