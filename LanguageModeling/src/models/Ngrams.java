@@ -9,6 +9,8 @@
 
 package models;
 
+import java.util.Vector;
+
 public class Ngrams {
 	/**
 	 * @param args
@@ -24,9 +26,9 @@ public class Ngrams {
 	 * Returns the two Bigrams and Unigrams objects with bigrams and unigrams counted, 
 	 *     but frequencies set to 0
 	 */
-	public static void indexText(String[] toks, Bigrams bg, Unigrams ug){
-		int tlength= toks.length;
-		String cur= toks[0];
+	public static void indexText(Vector<String> toks, Bigrams bg, Unigrams ug){
+		int tlength= toks.size();
+		String cur= toks.elementAt(0);
 		String last= "<s>";   //fix when we figure out start tokens once we set tokenized array
 		ug.addNew(cur);
 		ug.addNew(last);
@@ -34,8 +36,12 @@ public class Ngrams {
 		bg.addNew(firstBg);
 		last= cur;
 		for (int i= 1; i<tlength; i++){
-			  cur= toks[i];
+			  cur= toks.elementAt(i);
 			  Pair<String, String> loopBg= new Pair<String, String>(last, cur);
+			/*  if (cur.equals(".")){
+				  turn into a switch case
+			  }*/
+			  
 			  //three cases. 1) bigram has been seen
 			  if (bg.containsBg(loopBg)){
 				  bg.updateSeen(loopBg);
@@ -121,40 +127,19 @@ public class Ngrams {
 	}
 	
 	public static void main(String[] args) {
-		//toks = input.tokenize();
-		String[] toks= {
-				"the", "fat", "the", "fat", "friend", "ate",
-				"twice", "and", "ate", "twice", "and", "ate", "twice"};
-		
-		Bigrams bgs= new Bigrams();
+
+		Tokenizer tok= new Tokenizer();
+		Vector<String> testV= tok.tokenize("wsj.train");
+		Bigrams bgs = new Bigrams();
 		Unigrams ugs= new Unigrams();
-		int tokSize= toks.length;
-		System.out.println("toks in main method are: " + tokSize);
-
-		indexText(toks, bgs, ugs);
-	for(String p: ugs.unigramHT.keySet()){
-		System.out.print(p);
-		System.out.println(ugs.getCount(p));
 		
-	}
-		setFreqs(tokSize, bgs, ugs);
-		System.out.println("unigrams");
-		for(Pair<Integer, Double> p: ugs.unigramHT.values()){
-			System.out.println(p.getFirst()+ " , freq: "+ p.getSec());
-		}		
-			System.out.println("bigrams");
-			for(Pair<String, String> bg: bgs.getAll()){
-			System.out.println("for " + bg.toString() + "count: " + bgs.getBgCount(bg) + " and freq: " + bgs.getBgfreq(bg));
-
-			
-			}
-	for (String prefix: bgs.prefixHT.keySet()){
-		System.out.print("bigram set for prefix: "+ prefix + " is:");
-		for (Pair<String, String> bg: bgs.prefixHT.get(prefix)){
-			System.out.println(bg.toString());
+		Ngrams.indexText(testV, bgs, ugs);
+		Ngrams.setFreqs(testV.size(), bgs, ugs);
+		
+		for(Pair<String, String> bGram: bgs.bigramHT.keySet()){
+			System.out.println("for " + bGram.toString() + " count: " + bgs.getBgCount(bGram) + " freq is: " + bgs.getBgfreq(bGram) );
 			
 		}
-	}
 
 		
 	}
