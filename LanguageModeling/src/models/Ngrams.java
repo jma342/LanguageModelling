@@ -19,17 +19,8 @@ public class Ngrams {
 	 * @param args
 	 */
 	
-<<<<<<< HEAD
-	//pass in instances of th bigram and unigram
-	public static void BuildModels(String[] toks, Bigrams bg, Unigrams ug){
-	}
-	//help
-	//helper function called by "build models"
-	public static void indexBg(String[] toks, Bigrams bg, Unigrams ug)
-=======
 	//pass in instances of the bigram and unigram
 	public static void BuildModels(String[] toks, Bigrams bg, Unigrams ug)
->>>>>>> branch 'master' of ssh://git@github.com/jma342/LanguageModelling.git
 	{
 	}
 
@@ -44,37 +35,6 @@ public class Ngrams {
 		String last= "<s>";   //fix when we figure out start tokens once we set tokenized array
 		ug.addNew(cur);
 		ug.addNew(last);
-<<<<<<< HEAD
-		bg.addNew(last, cur);
-		
-		last = cur;
-		
-		for (int i = 1; i < tlength; i++) 
-		{
-			cur = toks[i];
-				
-			//three cases. 1) bigram has been seen
-			if (bg.containsBg(last, cur)) 
-			{
-				bg.updateSeen(last, cur);
-				ug.updateSeen(cur);
-			}
-			else {
-				// 2) word seen, but not bigram
-				if (ug.contains(cur)) 
-				{
-					bg.addNew(last, cur);
-					ug.updateSeen(cur);
-				}
-				// 3) new word entirely
-				else 
-				{
-					ug.addNew(cur);
-					bg.addNew(last, cur);
-				}
-			}
-			last = cur;
-=======
 		Pair<String, String> firstBg= new Pair<String, String>(last, cur);
 		bg.addNew(firstBg);
 		last= cur;
@@ -95,7 +55,6 @@ public class Ngrams {
 			     }
 			  last= cur;
 
->>>>>>> branch 'master' of ssh://git@github.com/jma342/LanguageModelling.git
 		} // end loop
 	}
 
@@ -105,34 +64,11 @@ public class Ngrams {
 	 */
 	public static void setFreqs(int tokSize, Bigrams bgs, Unigrams ugs){
 		//set unigram HT entries for frequency, calculated by normalzing UG count by number of tokens
-<<<<<<< HEAD
-		for (String uGram: ugs.getAll()) {
-			int ucount = ugs.getCount(uGram);
-			double ufreq = ((double)ucount/tokSize);
-=======
 		for(String uGram: ugs.getAll()){
 			int ucount= ugs.getCount(uGram);
 			double ufreq= ((double)ucount/tokSize);
->>>>>>> branch 'master' of ssh://git@github.com/jma342/LanguageModelling.git
 			ugs.setFreq(uGram, ufreq);
 		}
-<<<<<<< HEAD
-		
-		//test print
-		/*for(Pair<String, String> bGram: bgs.getAll()) {
-			System.out.println(bGram.toString());
-		}*/
-		
-		//set bigram HT entries for frequency, calculated by normalizing BG count by prefix count
-		for(Pair<String, String> bGram: bgs.getAll()) {
-			int bcount = bgs.getBgCount(bGram.getFirst(), bGram.getSec());
-			int pcount = ugs.getCount(bGram.getFirst()); //sets p count to count of prefix from unigram table
-			
-//			System.out.println("bigram count for "+ bGram.toString() + " is: "+ bcount+ ". And prefix, \""+ bGram.getFirst() + "\", count is: " + pcount);
-			
-			double bfreq = ((double)bcount/(double)pcount);
-			bgs.setFreq(bGram.getFirst(), bGram.getSec(), bfreq);
-=======
 
 		//set bigram HT entries for frequency, 
 		//calculated by normalizing BG count by prefix count
@@ -141,7 +77,6 @@ public class Ngrams {
 			int pcount= ugs.getCount(bGram.getFirst());  //sets p count to count of prefix from unigram table
 			double bfreq= ((double)bcount)/pcount;
 			bgs.setFreq(bGram, bfreq);
->>>>>>> branch 'master' of ssh://git@github.com/jma342/LanguageModelling.git
 		}	
 	}
 	
@@ -149,18 +84,8 @@ public class Ngrams {
 		//TODO: Random sentence generator
 	}
 	
-<<<<<<< HEAD
 	// Good-Turing smoothing method for unigrams
 	public static void smooth(Unigrams ugs) {
-=======
-
-	/*public static Bigrams smoothBg(Bigrams bgs, Unigrams ugs) {
-		//TODO: Good-Turing smoothing method
-		//vector<int> countUGram = new Vector<int>;
-
-		int[] countUGram = new int[ugs.size()];
-		int[] countBGram = new int[bgs.size()];
->>>>>>> branch 'master' of ssh://git@github.com/jma342/LanguageModelling.git
 		
 		HashMap<Integer, Double> unigramCount = new HashMap<Integer, Double>();
 		
@@ -190,17 +115,12 @@ public class Ngrams {
 			ugs.setFreq(uGram, Pgt);
 		}
 		
-<<<<<<< HEAD
 	}
 
 	public static void smooth(Bigrams ugs) {
 		//TODO: Good-Turing Smoothing method for bigrams
 	}
 
-=======
-	}*/
-	
->>>>>>> branch 'master' of ssh://git@github.com/jma342/LanguageModelling.git
 	//tricky question of inhereitence here-- what class for the arguement? model class?
 	public static void findPerplexity(String[] testToks) {
 		//TODO: Perplexity implementation
@@ -226,24 +146,11 @@ public class Ngrams {
 		System.out.print(p);
 		System.out.println(ugs.getCount(p));
 		
-<<<<<<< HEAD
-		/*for(String p: ugs.unigramHT.keySet()) {
-			System.out.print(p);
-			System.out.println(ugs.getCount(p));
-		}
-		
-=======
 	}
->>>>>>> branch 'master' of ssh://git@github.com/jma342/LanguageModelling.git
 		setFreqs(tokSize, bgs, ugs);
 		System.out.println("unigrams");
 		for(Pair<Integer, Double> p: ugs.unigramHT.values()){
 			System.out.println(p.getFirst()+ " , freq: "+ p.getSec());
-<<<<<<< HEAD
-		}*/
-		
-		smoothBg(bgs, ugs);
-=======
 		}		
 			System.out.println("bigrams");
 			for(Pair<String, String> bg: bgs.getAll()){
@@ -260,7 +167,6 @@ public class Ngrams {
 	}
 
 		
->>>>>>> branch 'master' of ssh://git@github.com/jma342/LanguageModelling.git
 	}
 
 }
