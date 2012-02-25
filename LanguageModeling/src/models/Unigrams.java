@@ -14,12 +14,15 @@ public class Unigrams {
 	 * @param args
 	 */
 	 
-	public boolean contains(String w) {
+	public boolean contains(String w) 
+	{
 		return unigramHT.containsKey(w);
 	}
 	 
-	public int getCount(String w){
-		if(unigramHT.containsKey(w)) { 
+	public int getCount(String w)
+	{
+		if(unigramHT.containsKey(w)) 
+		{ 
 			int count = unigramHT.get(w).getFirst();
 			return count;
 		}
@@ -28,27 +31,32 @@ public class Unigrams {
 		return 1;
 	}
 	 
-	public Set<String> getAll() {
+	public Set<String> getAll() 
+	{
 		Set<String> all = new HashSet<String>();
 		all.addAll(unigramHT.keySet());
 		return all;
 	}
 	 
-	public void addNew(String w){
+	public void addNew(String w)
+	{
 		Pair<Integer, Double> ugVal = new Pair<Integer, Double>(1, 0.0);
 		unigramHT.put(w, ugVal);
 	}
 	 
-	public void updateSeen(String w){
+	public void updateSeen(String w)
+	{
 		Pair<Integer, Double> ugVal;
 		int count;
 		double freq;
 		 
-		try {
+		try 
+		{
 			count = unigramHT.get(w).getFirst() + 1;
 			freq = unigramHT.get(w).getSec();
 		}
-		catch (NullPointerException e) {
+		catch (NullPointerException e) 
+		{
 			System.out.println("No count values stored for " + w);
 			count = 1;
 			freq = 0;
@@ -58,14 +66,17 @@ public class Unigrams {
 		unigramHT.put(w, ugVal);
 	 }
 	 
-	public void setFreq(String w, double fre){
+	public void setFreq(String w, double fre)
+	{
 		Pair<Integer, Double> ugVal;
 		int count;
 		 
-		try {
+		try 
+		{
 			count= unigramHT.get(w).getFirst();
 		}
-		catch (NullPointerException e) {
+		catch (NullPointerException e) 
+		{
 			System.out.println("****Error for " + w + " in freq setting");
 			count = 1;
 		}
@@ -73,7 +84,8 @@ public class Unigrams {
 		unigramHT.put(w, ugVal);
 	 }
 	 
-	public static void main(String[] args) {
+	public static void main(String[] args) 
+	{
 		// TODO Auto-generated method stub
 	}
 }

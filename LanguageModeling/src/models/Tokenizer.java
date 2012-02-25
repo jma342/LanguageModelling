@@ -98,28 +98,38 @@ public class Tokenizer
 	Vector<String> tokenize(String file)
 	{
 		fileName = file;
+		
 		setSentenceModel();
+		System.out.println("detecting Sentences");
 		detectSentences();
+		System.out.println("Sentences detected");
+		
+		System.out.println(" ");
+		
+		System.out.println("tokenising Sentences");
 		tokeniseSentences();
+		System.out.println("Sentences tokenised");
 		
 		return tokens;
 		
 	}
 	
 
-	/*public static void main(String[] args)
+	public static void main(String[] args)
 	{
 		Tokenizer tok = new Tokenizer();
+		
+		System.out.println("tokenizing");
 		Vector<String> tokens = new Vector<String>();
 		tokens = tok.tokenize("wsj.train");
+		System.out.println("tokenized");
 		
 		for(int count = 0;count < tokens.size();count++)
 		{
 			System.out.println(tokens.elementAt(count));
 		}
 		
-		
-	}*/
+	}
 
 }
 

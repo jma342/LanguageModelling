@@ -38,7 +38,7 @@ public class Pair<F, S> {
    }
 	
    public boolean equals(Object o) { 
-	   System.out.println("in equals()");
+	   //System.out.println("in equals()");
 	   if (o instanceof Pair) { 
 	     Pair<?, ?> p1 = (Pair<?, ?>) o;
 	     if ( p1.first.equals( this.first ) && p1.second.equals( this.second ) ) { 
