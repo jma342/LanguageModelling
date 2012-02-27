@@ -35,7 +35,7 @@ public class Bigrams {
 		 return count;
 	 }
 	 
-	 public double getBgfreq(Pair<String, String> bg)
+	 public double getBgFreq(Pair<String, String> bg)
 	 {
 		 return bigramHT.get(bg).getSec();
 	 }

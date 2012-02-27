@@ -9,6 +9,8 @@
 
 package models;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Random;
 import java.util.Map;
@@ -45,40 +47,63 @@ public class Ngrams {
 		{
 			cur= toks.elementAt(i);
 			
+			
 			if (!cur.equals("~"))  //everything else in this loop skips ~, including last element  
 			{ 
-				//handling of punctuation, creating 3 distinct end sentence tags.  Needs to be incorporated into random sentence generator 
-				if(cur.equals(".") || cur.equals("?") || cur.equals("!") )
-				{ if (toks.elementAt(i).equals("~"))
-					{cur= "</" + cur + "s>";}
-				}
-				
-				  
-			  Pair<String, String> loopBg= new Pair<String, String>(last, cur);
-			  //three cases. 1) bigram has been seen
-			  if (bg.containsBg(loopBg))
-			  {
-				  bg.updateSeen(loopBg);
-				  ug.updateSeen(cur);
-			  } 
-			  //2) word seen, but not bigram
-			  else
-			  { 
-				  if (ug.contains(cur))
-			  		{
-					  bg.addNew(loopBg);
+				//jma342 - Feb 27th - this ensures that the following punctuation marks are only counted
+				//when they terminate a sentence. Prevents abbreviations from being
+				//counted as terminating characters
+				if(((cur.equals(".") || cur.equals("?") || cur.equals("!")) && toks.elementAt(i+1).equals("~")) ||
+						(!cur.equals(".") && !cur.equals("?") && !cur.equals("!")))	
+				{ 
+					
+				  Pair<String, String> loopBg= new Pair<String, String>(last, cur);
+				  //three cases. 1) bigram has been seen
+				  if (bg.containsBg(loopBg))
+				  {
+					  bg.updateSeen(loopBg);
 					  ug.updateSeen(cur);
-					} 
-			  //3) new word entirely
+				  } 
+				  //2) word seen, but not bigram
+				  else
+				  { 
+					  if (ug.contains(cur))
+				  		{
+						  bg.addNew(loopBg);
+						  ug.updateSeen(cur);
+						} 
+				  //3) new word entirely
+					  else
+					  {
+						  ug.addNew(cur);
+						  bg.addNew(loopBg); 
+					  } 
+				  }
+				  
+				  //granted that these are terminating characters the <s>(beginning of sentence token) will
+				  //be used to be the first word in the subsequent bigram
+				  if ((cur.equals(".") || cur.equals("?") || cur.equals("!")))
+				  {
+					  last= "<s>";
+					  
+					  //this token needs to be updated within the unigram
+					  if (ug.contains(last))
+					  {
+						ug.updateSeen(last);
+					  } 
+					
+					  else
+					  { 
+						ug.addNew(last);
+					  } 
+				  
+				  }
 				  else
 				  {
-					  ug.addNew(cur);
-					  bg.addNew(loopBg); 
-				  } 
-			  }
-			  
-			  last= cur;
-			}
+					  last= cur;
+				  }
+				}//end if
+			}//end if
 		} // end loop
 	}
 
@@ -108,7 +133,7 @@ public class Ngrams {
 	}
 
 	//jma342 - Feb 25th 3:30 AM
-	public static void randomSentence(Bigrams bgs, Unigrams ugs,int corpusSize) 
+	public static void randomSentenceUnigrams(Unigrams ugs,int corpusSize) 
 	{
 		Random generator = new Random();
 		
@@ -128,34 +153,25 @@ public class Ngrams {
 			
 			for(String key: ugs.unigramHT.keySet())
 			{
-				//jma342- feb 25 3:35AM -- added for debugging purposes
-				/*System.out.println("Random number:" + randomNumber
-						+ "Key: " + key + " RangeUpperBound: " + 
-						(ugs.unigramHT.get(key).getFirst() + rangeUpperBound));
-*/				
-				//jma342- feb 25 3:35AM -- added to pause screen
-				/*try {
-					int a = System.in.read();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}*/
 				//the count value of the last word is added to the count value
 				//of the current word to form the upperbound of the current word
-				if(randomNumber <= (ugs.unigramHT.get(key).getFirst() + rangeUpperBound))
+				if(!key.equals("<s>"))//excludes beginning sentence marker from being in unigram random senetence
 				{
-					//if key is found based on the random number
-					//being less than its upper found
-					//the search ends and a new random number is generated
-					//for a new search
-					keyChosen = key;
-					randomSentence.add(key);
-					break;
-				}
+					if(randomNumber <= (ugs.unigramHT.get(key).getFirst() + rangeUpperBound))
+					{
+						//if key is found based on the random number
+						//being less than its upper found
+						//the search ends and a new random number is generated
+						//for a new search
+						keyChosen = key;
+						randomSentence.add(key);
+						break;
+					}
 				
-				//the count value of the current word is set here as it
-				//will be seen as the last word for the next iteration of the loop
-				rangeUpperBound += ugs.unigramHT.get(key).getFirst();
+					//the count value of the current word is set here as it
+					//will be seen as the last word for the next iteration of the loop
+					rangeUpperBound += ugs.unigramHT.get(key).getFirst();
+				}
 				
 			}
 			
@@ -171,12 +187,70 @@ public class Ngrams {
 		}
 		
 	}
+	
+	//jma342 - Feb 26th 10:16 PM
+	public static void randomSentenceBigrams(Unigrams ugs,Bigrams bgs,int corpusSize) 
+	{
+		Random generator = new Random();
+		
+		Vector<String> randomSentence = new Vector<String>();
+		
+		int rangeUpperBound = 0;//holds the count value of the last word
+		
+		String firstWord = "<s>";//initialised to beginning sentence token
+		
+		//the unigram count for the first word is used to normalise
+		//the counts of its bigrams. Therefore generating the random number
+		//bounded by the unigram count is ideal
+		int randomNumber = generator.nextInt(ugs.unigramHT.get(firstWord).getFirst()) + 1;
+		
+		//loops through the bigram and generaters random sentence until
+		//'.','!','?' is reached
+		do
+		{
+			for(Pair<String,String> bgSet: bgs.prefixHT.get(firstWord))
+			{
+				//the count value of the last word is added to the count value
+				//of the current word to form the upperbound of the current word
+				if(randomNumber <= ((bgs.bigramHT.get(bgSet).getFirst())
+						+ rangeUpperBound))
+				{
+					//if key is found based on the random number
+					//being less than its upper found
+					//the search ends and a new random number is generated
+					//for a new search
+					randomSentence.add(firstWord);
+					firstWord = bgSet.getSec();//sets first word to be second word of pairing chosen
+					
+					break;
+				}
+				
+				//the count value of the current word is set here as it
+				//will be seen as the last word for the next iteration of the loop
+				
+				rangeUpperBound += (bgs.bigramHT.get(bgSet).getFirst());
+				
+			}
+			
+			
+			rangeUpperBound = 0;
+			randomNumber = generator.nextInt(ugs.unigramHT.get(firstWord).getFirst()) + 1;
+			
+		} while(!firstWord.equals(".") && !firstWord.equals("!") && !firstWord.equals("?"));
+		
+		randomSentence.add(firstWord);//add the sentence terminator
+		
+		for(int count = 0; count < randomSentence.size();count++)
+		{
+			System.out.print(randomSentence.elementAt(count) + " ");
+		}
+		
+	}
 
 	// Good-Turing smoothing method for unigrams
-	public static void smooth(Unigrams ugs) 
+	public static void smoothGoodTuring(Unigrams ugs) 
 	{
-
-		HashMap<Integer, Double> unigramCount = new HashMap<Integer, Double>();
+		HashMap<Double, Double> unigramCount = new HashMap<Double, Double>();
 
 		double totalCount = 0; 
 
@@ -185,40 +259,133 @@ public class Ngrams {
 
 		for (String uGram: ugs.getAll()) 
 		{
-			int count = ugs.getCount(uGram);
+			double count = ugs.getCount(uGram);
 
 			if (!unigramCount.containsKey(count)) 
 			{
-				unigramCount.put(new Integer(count), new Double(1));
+				unigramCount.put(new Double(count), new Double(1));
 			}
 			else 
 			{
-				Double newCount = unigramCount.get(new Integer(count));
-				unigramCount.put(new Integer(count), newCount + 1);
+				Double newCount = unigramCount.get(new Double(count));
+				unigramCount.put(new Double(count), newCount + 1);
 			}
 		}
 
-		Double k = new Double(1 / totalCount);
+		Double k = new Double(1/totalCount);
 
 		for (String uGram: ugs.getAll()) 
 		{
-			int count = ugs.getCount(uGram);
+			double count = ugs.getCount(uGram);
 
-			Double Pgt = k * unigramCount.get(new Integer(count + 1)) / unigramCount.get(new Integer(count));
+			if (!unigramCount.containsKey(new Double(count + 1)))
+				continue;
+			
+			Double Pgt = k * (count + 1) * unigramCount.get(new Double(count + 1)) / unigramCount.get(new Double(count));
 			ugs.setFreq(uGram, Pgt);
 		}
-
+	
+		try {
+			FileWriter fstream = new FileWriter("smooth-ug.txt");
+			BufferedWriter out = new BufferedWriter(fstream);
+			System.out.println("***Good-Turing smoothing for unigrams started***");
+			for (String uGram: ugs.getAll()) 
+				out.write("{" + uGram + "}:"+ ugs.getFreq(uGram) + "\n");
+			System.out.println("***Good-Turing smoothing for unigrams completed***");
+			out.close();
+		} 
+		catch (Exception e) {
+			 System.err.println("Smooth Unigram Error: " + e.getMessage());
+		}
 	}
 
-	public static void smooth(Bigrams ugs) 
+	public static void smoothGoodTuring(Bigrams bgs) 
 	{
-		//TODO: Good-Turing Smoothing method for bigrams
+		// Key: unigram N times seen
+		// Value: number of unigrams that appear N times 
+		HashMap<Double, Double> bigramCount = new HashMap<Double, Double>();
+		
+		double totalCount = 0; // Size of corpus
+
+		// Calculating corpus size
+		for (Pair<String, String> bGram: bgs.getAll())
+			totalCount += bgs.getBgCount(bGram);
+
+		// Populating HashMap with data from unigram HashMap
+		for (Pair<String, String> bGram: bgs.getAll()) 
+		{
+			double count = bgs.getBgCount(bGram);
+
+			if (!bigramCount.containsKey(count)) 
+			{
+				bigramCount.put(new Double(count), new Double(1));
+			}
+			else 
+			{
+				Double newCount = bigramCount.get(new Double(count));
+				bigramCount.put(new Double(count), newCount + 1);
+			}
+		}
+
+		// 
+		Double k = new Double(1/totalCount);
+
+		for (Pair<String, String> bGram: bgs.getAll())
+		{
+			double count = bgs.getBgCount(bGram);
+
+			if (!bigramCount.containsKey(new Double(count + 1)))
+				continue;
+			
+			Double Pgt = k * (count + 1) * bigramCount.get(new Double(count + 1)) / bigramCount.get(new Double(count));
+			bgs.setFreq(bGram, Pgt);
+		}
+	
+		try {
+			FileWriter fstream = new FileWriter("smooth-bg.txt");
+			BufferedWriter out = new BufferedWriter(fstream);
+			System.out.println("***Good-Turing smoothing for bigrams started***");
+			for (Pair<String, String> bGram: bgs.getAll())
+				out.write("{" + bGram.getFirst() + "," + bGram.getSec() + "}:" + bgs.getBgFreq(bGram) + "\n");
+			System.out.println("***Good-Turing smoothing for bigrams completed***");
+			out.close();
+		} 
+		catch (Exception e) {
+			 System.err.println("Smooth Bigram Error: " + e.getMessage());
+		}
 	}
 
-	//tricky question of inhereitence here-- what class for the arguement? model class?
-	public static void findPerplexity(String[] testToks) 
+	
+	public static double findPerplexity(Unigrams ugs) 
 	{
-		//TODO: Perplexity implementation
+		double PP = 0;            // Perplexity
+		double probProduct = 1;   // Product of unigram probabilities
+		double totalCount = 0;    // Size of corpus
+		
+		for (String uGram: ugs.getAll()) {
+			probProduct *= 1 / ugs.getFreq(uGram);
+			totalCount += 1;
+		}
+		
+		PP = Math.pow(probProduct, 1/totalCount);
+		
+		return PP;
+	}
+	
+	public static double findPerplexity(Bigrams bgs) 
+	{
+		double PP = 0;              // Perplexity
+		double probProduct = 1;     // Product of bigram probabilities
+		double totalCount = 0;      // Size of corpus
+		
+		for (Pair<String, String> bGram: bgs.getAll()) {
+			probProduct *= 1 / bgs.getBgFreq(bGram);
+			totalCount += 1;
+		}
+		
+		PP = Math.pow(probProduct, 1/totalCount);
+		
+		return PP;
 	}
 
 	public static void emailPrediction() 
@@ -273,7 +440,7 @@ public class Ngrams {
 		System.out.println("bigrams");
 		for(Pair<String, String> bg: bgs.getAll())
 		{
-			System.out.println("for " + bg.toString() + "count: " + bgs.getBgCount(bg) + " and freq: " + bgs.getBgfreq(bg));
+			System.out.println("for " + bg.toString() + "count: " + bgs.getBgCount(bg) + " and freq: " + bgs.getBgFreq(bg));
 		}
 		
 		for (String prefix: bgs.prefixHT.keySet())
@@ -284,6 +451,21 @@ public class Ngrams {
 				System.out.println(bg.toString());
 			}
 		}
+		
+		
+		/*Testing Good-Turing smoothing alogrithm for unigrams and bigrams
+		 *  Smoothed data for unigrams and bigrams in text files such as:
+		 *  smooth-ug.txt
+		 *  smooth-bg.txt*/
+		 
+		smoothGoodTuring(ugs);
+		smoothGoodTuring(bgs);
+		
+		
+		 /* Testing perplexity for given unigrams and bigrams*/
+		 
+		System.out.println("Perplexity(unigram) = " + findPerplexity(ugs));
+		System.out.println("Perplexity(bigram)  = " + findPerplexity(bgs));
 	}
 	
 /*	//jma342 - Feb25th 2:00am -- jamaal's main for debuggin while building random sentence generator
@@ -292,13 +474,14 @@ public class Ngrams {
 		Tokenizer tokens = new Tokenizer();
 		Vector<String> toksV= new Vector<String>();
 		
-		toksV = tokens.tokenize("TrainingData\\DS3_train.txt");
+		toksV = tokens.tokenize("TrainingData\\DS4_train.txt");
+		//toksV = tokens.tokenize("smallParse.txt");
 		
 		
 		Bigrams bgs= new Bigrams();
 		Unigrams ugs= new Unigrams();
 		int tokSize= toksV.size();
-		System.out.println("toks in main method are: " + tokSize);
+		//System.out.println("toks in main method are: " + tokSize);
 
 		int a = 0;
 		
@@ -313,6 +496,8 @@ public class Ngrams {
 		}
 		
 		setFreqs(tokSize, bgs, ugs);
+		
+		System.out.println();
 		System.out.println("unigrams");
 		
 		//jma342 - feb 25 1:40AM -- removed for the for loop subsequent
@@ -332,33 +517,15 @@ public class Ngrams {
 		}
 		
 		//jma342 -- feb 25th 2:00AM  -- ensuring that token counts total up to number of tokens
-		System.out.println(overallCount);
-		
-		randomSentence(bgs,ugs,tokSize);
-		
-		//jma342- feb 25 1:40AM -- added to pause screen
-		try {
-			a = System.in.read();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
+		//System.out.println(overallCount);
+		System.out.println("");
+		randomSentenceUnigrams(ugs,tokSize);
+		System.out.println("");
+		System.out.println("");
 		System.out.println("bigrams");
-		for(Pair<String, String> bg: bgs.getAll())
-		{
-			System.out.println("for " + bg.toString() + "count: " + bgs.getBgCount(bg) + " and freq: " + bgs.getBgfreq(bg));
-		}
+		System.out.println("");
+		randomSentenceBigrams(ugs,bgs,tokSize);
 		
-		for (String prefix: bgs.prefixHT.keySet())
-		{
-			System.out.print("bigram set for prefix: "+ prefix + " is:");
-			for (Pair<String, String> bg: bgs.prefixHT.get(prefix))
-			{
-				System.out.println(bg.toString());
-			}
-		}
 	}
 */
-
 }

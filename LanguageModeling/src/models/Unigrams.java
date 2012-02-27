@@ -30,6 +30,18 @@ public class Unigrams {
 		System.out.println("***strange, :" + w + ": doesn't have a count");
 		return 1;
 	}
+	
+	public double getFreq(String w)
+	{
+		if(unigramHT.containsKey(w)) 
+		{ 
+			double freq = unigramHT.get(w).getSec();
+			return freq;
+		}
+		 
+		System.out.println("***strange, :" + w + ": doesn't have a count");
+		return 0;
+	}
 	 
 	public double getFreq(String w)
 	{
