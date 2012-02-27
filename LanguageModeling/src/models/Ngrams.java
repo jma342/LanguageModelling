@@ -9,6 +9,8 @@
 
 package models;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Random;
 import java.util.Map;
@@ -176,7 +178,7 @@ public class Ngrams {
 	public static void smooth(Unigrams ugs) 
 	{
 
-		HashMap<Integer, Double> unigramCount = new HashMap<Integer, Double>();
+		HashMap<Double, Double> unigramCount = new HashMap<Double, Double>();
 
 		double totalCount = 0; 
 
@@ -185,34 +187,96 @@ public class Ngrams {
 
 		for (String uGram: ugs.getAll()) 
 		{
-			int count = ugs.getCount(uGram);
+			double count = ugs.getCount(uGram);
 
 			if (!unigramCount.containsKey(count)) 
 			{
-				unigramCount.put(new Integer(count), new Double(1));
+				unigramCount.put(new Double(count), new Double(1));
 			}
 			else 
 			{
-				Double newCount = unigramCount.get(new Integer(count));
-				unigramCount.put(new Integer(count), newCount + 1);
+				Double newCount = unigramCount.get(new Double(count));
+				unigramCount.put(new Double(count), newCount + 1);
 			}
 		}
 
-		Double k = new Double(1 / totalCount);
+		Double k = new Double(1/totalCount);
 
 		for (String uGram: ugs.getAll()) 
 		{
-			int count = ugs.getCount(uGram);
+			double count = ugs.getCount(uGram);
 
-			Double Pgt = k * unigramCount.get(new Integer(count + 1)) / unigramCount.get(new Integer(count));
+			if (!unigramCount.containsKey(new Double(count + 1)))
+				continue;
+			
+			Double Pgt = k * (count + 1) * unigramCount.get(new Double(count + 1)) / unigramCount.get(new Double(count));
 			ugs.setFreq(uGram, Pgt);
 		}
-
+	
+		try {
+			FileWriter fstream = new FileWriter("smooth-ug.txt");
+			BufferedWriter out = new BufferedWriter(fstream);
+			System.out.println("***Good-Turing smoothing for unigrams started***");
+			for (String uGram: ugs.getAll()) 
+				out.write("{" + uGram + "}:"+ ugs.getFreq(uGram) + "\n");
+			System.out.println("***Good-Turing smoothing for unigrams completed***");
+			out.close();
+		} 
+		catch (Exception e) {
+			 System.err.println("Smooth Unigram Error: " + e.getMessage());
+		}
 	}
 
-	public static void smooth(Bigrams ugs) 
+	public static void smooth(Bigrams bgs) 
 	{
 		//TODO: Good-Turing Smoothing method for bigrams
+		HashMap<Double, Double> bigramCount = new HashMap<Double, Double>();
+		
+		double totalCount = 0; 
+
+		for (Pair<String, String> bGram: bgs.getAll())
+			totalCount += bgs.getBgCount(bGram);
+
+		for (Pair<String, String> bGram: bgs.getAll()) 
+		{
+			double count = bgs.getBgCount(bGram);
+
+			if (!bigramCount.containsKey(count)) 
+			{
+				bigramCount.put(new Double(count), new Double(1));
+			}
+			else 
+			{
+				Double newCount = bigramCount.get(new Double(count));
+				bigramCount.put(new Double(count), newCount + 1);
+			}
+		}
+
+		Double k = new Double(1/totalCount);
+
+		for (Pair<String, String> bGram: bgs.getAll())
+		{
+			double count = bgs.getBgCount(bGram);
+
+			if (!bigramCount.containsKey(new Double(count + 1)))
+				continue;
+			
+			Double Pgt = k * (count + 1) * bigramCount.get(new Double(count + 1)) / bigramCount.get(new Double(count));
+			bgs.setFreq(bGram, Pgt);
+		}
+	
+		try {
+			FileWriter fstream = new FileWriter("smooth-bg.txt");
+			BufferedWriter out = new BufferedWriter(fstream);
+			System.out.println("***Good-Turing smoothing for bigrams started***");
+			for (Pair<String, String> bGram: bgs.getAll())
+				out.write("{" + bGram.getFirst() + "," + bGram.getSec() + "}:" + bgs.getBgfreq(bGram) + "\n");
+			System.out.println("***Good-Turing smoothing for bigrams completed***");
+			out.close();
+		} 
+		catch (Exception e) {
+			 System.err.println("Smooth Bigram Error: " + e.getMessage());
+		}
 	}
 
 	//tricky question of inhereitence here-- what class for the arguement? model class?
@@ -284,6 +348,8 @@ public class Ngrams {
 				System.out.println(bg.toString());
 			}
 		}
+		smooth(ugs);
+		smooth(bgs);
 	}
 	
 /*	//jma342 - Feb25th 2:00am -- jamaal's main for debuggin while building random sentence generator
