@@ -175,9 +175,8 @@ public class Ngrams {
 	}
 
 	// Good-Turing smoothing method for unigrams
-	public static void smooth(Unigrams ugs) 
+	public static void smoothGoodTuring(Unigrams ugs) 
 	{
-
 		HashMap<Double, Double> unigramCount = new HashMap<Double, Double>();
 
 		double totalCount = 0; 
@@ -227,16 +226,19 @@ public class Ngrams {
 		}
 	}
 
-	public static void smooth(Bigrams bgs) 
+	public static void smoothGoodTuring(Bigrams bgs) 
 	{
-		//TODO: Good-Turing Smoothing method for bigrams
+		// Key: unigram N times seen
+		// Value: number of unigrams that appear N times 
 		HashMap<Double, Double> bigramCount = new HashMap<Double, Double>();
 		
-		double totalCount = 0; 
+		double totalCount = 0; // Size of corpus
 
+		// Calculating corpus size
 		for (Pair<String, String> bGram: bgs.getAll())
 			totalCount += bgs.getBgCount(bGram);
 
+		// Populating HashMap with data from unigram HashMap
 		for (Pair<String, String> bGram: bgs.getAll()) 
 		{
 			double count = bgs.getBgCount(bGram);
@@ -252,6 +254,7 @@ public class Ngrams {
 			}
 		}
 
+		// 
 		Double k = new Double(1/totalCount);
 
 		for (Pair<String, String> bGram: bgs.getAll())
@@ -270,7 +273,7 @@ public class Ngrams {
 			BufferedWriter out = new BufferedWriter(fstream);
 			System.out.println("***Good-Turing smoothing for bigrams started***");
 			for (Pair<String, String> bGram: bgs.getAll())
-				out.write("{" + bGram.getFirst() + "," + bGram.getSec() + "}:" + bgs.getBgfreq(bGram) + "\n");
+				out.write("{" + bGram.getFirst() + "," + bGram.getSec() + "}:" + bgs.getBgFreq(bGram) + "\n");
 			System.out.println("***Good-Turing smoothing for bigrams completed***");
 			out.close();
 		} 
@@ -279,10 +282,37 @@ public class Ngrams {
 		}
 	}
 
-	//tricky question of inhereitence here-- what class for the arguement? model class?
-	public static void findPerplexity(String[] testToks) 
+	
+	public static double findPerplexity(Unigrams ugs) 
 	{
-		//TODO: Perplexity implementation
+		double PP = 0;            // Perplexity
+		double probProduct = 1;   // Product of unigram probabilities
+		double totalCount = 0;    // Size of corpus
+		
+		for (String uGram: ugs.getAll()) {
+			probProduct *= 1 / ugs.getFreq(uGram);
+			totalCount += 1;
+		}
+		
+		PP = Math.pow(probProduct, 1/totalCount);
+		
+		return PP;
+	}
+	
+	public static double findPerplexity(Bigrams bgs) 
+	{
+		double PP = 0;              // Perplexity
+		double probProduct = 1;     // Product of bigram probabilities
+		double totalCount = 0;      // Size of corpus
+		
+		for (Pair<String, String> bGram: bgs.getAll()) {
+			probProduct *= 1 / bgs.getBgFreq(bGram);
+			totalCount += 1;
+		}
+		
+		PP = Math.pow(probProduct, 1/totalCount);
+		
+		return PP;
 	}
 
 	public static void emailPrediction() 
@@ -337,7 +367,7 @@ public class Ngrams {
 		System.out.println("bigrams");
 		for(Pair<String, String> bg: bgs.getAll())
 		{
-			System.out.println("for " + bg.toString() + "count: " + bgs.getBgCount(bg) + " and freq: " + bgs.getBgfreq(bg));
+			System.out.println("for " + bg.toString() + "count: " + bgs.getBgCount(bg) + " and freq: " + bgs.getBgFreq(bg));
 		}
 		
 		for (String prefix: bgs.prefixHT.keySet())
@@ -348,8 +378,21 @@ public class Ngrams {
 				System.out.println(bg.toString());
 			}
 		}
-		smooth(ugs);
-		smooth(bgs);
+		
+		/*
+		 *  Testing Good-Turing smoothing alogrithm for unigrams and bigrams
+		 *  Smoothed data for unigrams and bigrams in text files such as:
+		 *  smooth-ug.txt
+		 *  smooth-bg.txt
+		 */
+		smoothGoodTuring(ugs);
+		smoothGoodTuring(bgs);
+		
+		/*
+		 * Testing perplexity for given unigrams and bigrams
+		 */
+		System.out.println("Perplexity(unigram) = " + findPerplexity(ugs));
+		System.out.println("Perplexity(bigram)  = " + findPerplexity(bgs));
 	}
 	
 /*	//jma342 - Feb25th 2:00am -- jamaal's main for debuggin while building random sentence generator
