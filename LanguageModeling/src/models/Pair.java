@@ -1,6 +1,10 @@
+/*sorts by value of second element
+ * higher magnitude considered higher priority in priority queue.  Therefore the high scores is stored at head
+ */
+
 package models;
 
-public class Pair<F, S> {
+public class Pair<F,S extends Comparable<S>> implements Comparable<Pair< F,S>> {
 
 	private F first;
 	private S second;
@@ -47,7 +51,12 @@ public class Pair<F, S> {
 	   }
 	   return(false);
 	 }
-   
+
+   public int compareTo(Pair<F, S> o) 
+   {
+	return -this.second.compareTo(o.second);
+	}   
+
    public static void main(String[] args){
 	   Pair<String, String> s1 = new Pair<String, String>("hi", "there");
 	   Pair<String, String> s2 = new Pair<String, String>("there", "hi");
@@ -56,5 +65,6 @@ public class Pair<F, S> {
 	   System.out.println(s1.equals(s2));
 	   System.out.println(s1.equals(s3));
    }
+
    
 }

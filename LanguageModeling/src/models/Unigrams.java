@@ -31,6 +31,18 @@ public class Unigrams {
 		return 1;
 	}
 	 
+	public double getFreq(String w)
+	{
+		if(unigramHT.containsKey(w)) 
+		{ 
+			double freq= unigramHT.get(w).getFirst();
+			return freq;
+		}
+		 
+		System.out.println("***strange, :" + w + ": doesn't have a freq");
+		return 0;
+	}	
+	
 	public Set<String> getAll() 
 	{
 		Set<String> all = new HashSet<String>();
