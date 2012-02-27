@@ -43,7 +43,17 @@ public class Ngrams {
 		last= cur;
 		for (int i= 1; i<tlength; i++)
 		{
-			  cur= toks.elementAt(i);
+			cur= toks.elementAt(i);
+			
+			if (!cur.equals("~"))  //everything else in this loop skips ~, including last element  
+			{ 
+				//handling of punctuation, creating 3 distinct end sentence tags.  Needs to be incorporated into random sentence generator 
+				if(cur.equals(".") || cur.equals("?") || cur.equals("!") )
+				{ if (toks.elementAt(i).equals("~"))
+					{cur= "</" + cur + "s>";}
+				}
+				
+				  
 			  Pair<String, String> loopBg= new Pair<String, String>(last, cur);
 			  //three cases. 1) bigram has been seen
 			  if (bg.containsBg(loopBg))
@@ -68,7 +78,7 @@ public class Ngrams {
 			  }
 			  
 			  last= cur;
-
+			}
 		} // end loop
 	}
 
