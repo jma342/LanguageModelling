@@ -393,7 +393,7 @@ public class Ngrams {
 		//TODO: E-mail Prediction
 	}
 
-	/*public static void main(String[] args) 
+	public static void main(String[] args) 
 	{
 		//toks = input.tokenize();
 		Tokenizer tokens = new Tokenizer();
@@ -453,22 +453,22 @@ public class Ngrams {
 		}
 		
 		
-		 *  Testing Good-Turing smoothing alogrithm for unigrams and bigrams
+		/*Testing Good-Turing smoothing alogrithm for unigrams and bigrams
 		 *  Smoothed data for unigrams and bigrams in text files such as:
 		 *  smooth-ug.txt
-		 *  smooth-bg.txt
+		 *  smooth-bg.txt*/
 		 
 		smoothGoodTuring(ugs);
 		smoothGoodTuring(bgs);
 		
 		
-		 * Testing perplexity for given unigrams and bigrams
+		 /* Testing perplexity for given unigrams and bigrams*/
 		 
 		System.out.println("Perplexity(unigram) = " + findPerplexity(ugs));
 		System.out.println("Perplexity(bigram)  = " + findPerplexity(bgs));
 	}
-*/	
-	//jma342 - Feb25th 2:00am -- jamaal's main for debuggin while building random sentence generator
+	
+/*	//jma342 - Feb25th 2:00am -- jamaal's main for debuggin while building random sentence generator
 	public static void main(String[] args) 
 	{
 		Tokenizer tokens = new Tokenizer();
@@ -488,25 +488,25 @@ public class Ngrams {
 		indexText(toksV, bgs, ugs);
 		
 		//jma342 - feb 25 1:40AM -- no need to see unigram words and counts
-		/*for(String p: ugs.unigramHT.keySet())
+		for(String p: ugs.unigramHT.keySet())
 		{
 			System.out.print(p);
 			System.out.println(ugs.getCount(p));
 	
 		}
-		*/
+		
 		setFreqs(tokSize, bgs, ugs);
 		
 		System.out.println();
 		System.out.println("unigrams");
 		
 		//jma342 - feb 25 1:40AM -- removed for the for loop subsequent
-		/*for(Pair<Integer, Double> p: ugs.unigramHT.values())
+		for(Pair<Integer, Double> p: ugs.unigramHT.values())
 		{
 			System.out.println(p.getFirst()+ " , freq: "+ p.getSec());
-		}	*/	
+		}		
 		
-		/*int iterator = 0;
+		int iterator = 0;
 		int overallCount = 0;
 		for(String p: ugs.unigramHT.keySet())
 		{
@@ -514,7 +514,7 @@ public class Ngrams {
 			System.out.println(" Count " + ugs.unigramHT.get(p).getFirst() + ", Freq: " + String.format("%.2g%n", ugs.unigramHT.get(p).getSec()));
 			overallCount +=ugs.unigramHT.get(p).getFirst();
 	
-		}*/
+		}
 		
 		//jma342 -- feb 25th 2:00AM  -- ensuring that token counts total up to number of tokens
 		//System.out.println(overallCount);
@@ -527,5 +527,5 @@ public class Ngrams {
 		randomSentenceBigrams(ugs,bgs,tokSize);
 		
 	}
-
+*/
 }
