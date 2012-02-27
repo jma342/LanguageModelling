@@ -1,19 +1,6 @@
-<<<<<<< HEAD
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
-	<classpathentry kind="lib" path="/Users/nicholasbruns/Downloads/apache-opennlp-1.5.2-incubating/lib/opennlp-tools-1.5.2-incubating.jar"/>
-	<classpathentry kind="lib" path="/Users/nicholasbruns/Documents/Cornell/12_Spring/NLP/assn1/Prj1Ngrams/jsoup-1.6.1.jar"/>
-	<classpathentry kind="output" path="bin"/>
-</classpath>
-=======
-<?xml version="1.0" encoding="UTF-8"?>
-<classpath>
-	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path=""/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="C:/Users/jamsession/Desktop/apache-opennlp-1.5.2-incubating/lib/opennlp-tools-1.5.2-incubating.jar"/>
-	<classpathentry kind="lib" path="C:/Users/jamsession/Desktop/Jsoup/jsoup-1.6.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
->>>>>>> branch 'master' of ssh://git@github.com/jma342/LanguageModelling.git
