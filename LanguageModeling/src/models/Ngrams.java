@@ -194,7 +194,7 @@ public class Ngrams {
 		{
 			int count = ugs.getCount(uGram);
 
-			Double Pgt = k * unigramCount.get(new Integer(count));
+			Double Pgt = k * unigramCount.get(new Integer(count + 1)) / unigramCount.get(new Integer(count));
 			ugs.setFreq(uGram, Pgt);
 		}
 
