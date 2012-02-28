@@ -10,13 +10,18 @@
 package models;
 
 import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Random;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Scanner;
 import java.util.Vector;
+
+import opennlp.tools.tokenize.SimpleTokenizer;
 
 public class Ngrams {
 	/**
@@ -186,6 +191,111 @@ public class Ngrams {
 			double tfreq= ((double)tcount)/pcount;
 			
 			tgs.setFreq(tGram, tfreq);
+		}	
+	}
+
+	 /*yb85 - This version exists as smoothing doesnot incorportate trigrams. Hence the function
+	 * overloading
+	 */
+	public static void indexText(Vector<String> toks, Bigrams bg, Unigrams ug)
+	{
+		int tlength = toks.size();
+		String cur = toks.elementAt(0);
+		String last = "<s>";   //fix when we figure out start tokens once we set tokenized array
+		ug.addNew(cur);
+		ug.addNew(last);
+		Pair<String, String> firstBg= new Pair<String, String>(last, cur);
+		bg.addNew(firstBg);
+		last = cur;
+		for (int i= 1; i<tlength; i++)
+		{
+			cur= toks.elementAt(i);
+			
+			
+			if (!cur.equals("~"))  //everything else in this loop skips ~, including last element  
+			{ 
+				//jma342 - Feb 27th - this ensures that the following punctuation marks are only counted
+				//when they terminate a sentence. Prevents abbreviations from being
+				//counted as terminating characters
+				if(((cur.equals(".") || cur.equals("?") || cur.equals("!")) && toks.elementAt(i+1).equals("~")) ||
+						(!cur.equals(".") && !cur.equals("?") && !cur.equals("!")))	
+				{ 
+					
+				  Pair<String, String> loopBg= new Pair<String, String>(last, cur);
+				  //three cases. 1) bigram has been seen
+				  if (bg.containsBg(loopBg))
+				  {
+					  bg.updateSeen(loopBg);
+					  ug.updateSeen(cur);
+				  } 
+				  //2) word seen, but not bigram
+				  else
+				  { 
+					  if (ug.contains(cur))
+				  		{
+						  bg.addNew(loopBg);
+						  ug.updateSeen(cur);
+						} 
+				  //3) new word entirely
+					  else
+					  {
+						  ug.addNew(cur);
+						  bg.addNew(loopBg); 
+					  } 
+				  }
+				  
+				  //granted that these are terminating characters the <s>(beginning of sentence token) will
+				  //be used to be the first word in the subsequent bigram
+				  if ((cur.equals(".") || cur.equals("?") || cur.equals("!")))
+				  {
+					  last= "<s>";
+					  
+					  //this token needs to be updated within the unigram
+					  if (ug.contains(last))
+					  {
+						ug.updateSeen(last);
+					  } 
+					
+					  else
+					  { 
+						ug.addNew(last);
+					  } 
+				  
+				  }
+				  else
+				  {
+					  last= cur;
+				  }
+				}//end if
+			}//end if
+		} // end loop
+	}
+
+	/*
+	 * -recquires that instances of Bigrams and Unigrams were filled using indexText method
+	 * -sets the frequency field in HT entries
+	 * 
+	 * yb85 - This version exists as smoothing doesnot incorportate trigrams. Hence the function
+	 * overloading
+	 */
+	public static void setFreqs(int tokSize, Bigrams bgs, Unigrams ugs)
+	{
+		//set unigram HT entries for frequency, calculated by normalzing UG count by number of tokens
+		for(String uGram: ugs.getAll())
+		{
+			int ucount= ugs.getCount(uGram);
+			double ufreq= ((double)ucount/tokSize);
+			ugs.setFreq(uGram, ufreq);
+		}
+
+		//set bigram HT entries for frequency, 
+		//calculated by normalizing BG count by prefix count
+		for(Pair<String, String> bGram: bgs.getAll())
+		{
+			int bcount= bgs.getBgCount(bGram);
+			int pcount= ugs.getCount(bGram.getFirst());  //sets p count to count of prefix from unigram table
+			double bfreq= ((double)bcount)/pcount;
+			bgs.setFreq(bGram, bfreq);
 		}	
 	}
 
@@ -378,7 +488,7 @@ public class Ngrams {
 
 
 	// Good-Turing smoothing method for unigrams
-	public static void smoothGoodTuring(Unigrams ugs) 
+	public static Unigrams smoothGoodTuring(Unigrams ugs) 
 	{
 		HashMap<Double, Double> unigramCount = new HashMap<Double, Double>();
 
@@ -386,6 +496,8 @@ public class Ngrams {
 
 		for (String uGram: ugs.getAll())
 			totalCount += ugs.getCount(uGram);
+		
+		Double k = new Double(1/totalCount);
 
 		for (String uGram: ugs.getAll()) 
 		{
@@ -402,8 +514,6 @@ public class Ngrams {
 			}
 		}
 
-		Double k = new Double(1/totalCount);
-
 		for (String uGram: ugs.getAll()) 
 		{
 			double count = ugs.getCount(uGram);
@@ -415,24 +525,13 @@ public class Ngrams {
 			ugs.setFreq(uGram, Pgt);
 		}
 	
-		try {
-			FileWriter fstream = new FileWriter("smooth-ug.txt");
-			BufferedWriter out = new BufferedWriter(fstream);
-			System.out.println("***Good-Turing smoothing for unigrams started***");
-			for (String uGram: ugs.getAll()) 
-				out.write("{" + uGram + "}:"+ ugs.getFreq(uGram) + "\n");
-			System.out.println("***Good-Turing smoothing for unigrams completed***");
-			out.close();
-		} 
-		catch (Exception e) {
-			 System.err.println("Smooth Unigram Error: " + e.getMessage());
-		}
+		return ugs;
 	}
 
-	public static void smoothGoodTuring(Bigrams bgs) 
+	public static Bigrams smoothGoodTuring(Bigrams bgs) 
 	{
-		// Key: unigram N times seen
-		// Value: number of unigrams that appear N times 
+		// Key: bigram N times seen
+		// Value: number of bigrams that appear N times 
 		HashMap<Double, Double> bigramCount = new HashMap<Double, Double>();
 		
 		double totalCount = 0; // Size of corpus
@@ -440,8 +539,10 @@ public class Ngrams {
 		// Calculating corpus size
 		for (Pair<String, String> bGram: bgs.getAll())
 			totalCount += bgs.getBgCount(bGram);
+		
+		Double k = new Double(1/totalCount);
 
-		// Populating HashMap with data from unigram HashMap
+		// Populating HashMap with data from bigram HashMap
 		for (Pair<String, String> bGram: bgs.getAll()) 
 		{
 			double count = bgs.getBgCount(bGram);
@@ -457,9 +558,6 @@ public class Ngrams {
 			}
 		}
 
-		// 
-		Double k = new Double(1/totalCount);
-
 		for (Pair<String, String> bGram: bgs.getAll())
 		{
 			double count = bgs.getBgCount(bGram);
@@ -471,53 +569,101 @@ public class Ngrams {
 			bgs.setFreq(bGram, Pgt);
 		}
 	
-		try {
-			FileWriter fstream = new FileWriter("smooth-bg.txt");
-			BufferedWriter out = new BufferedWriter(fstream);
-			System.out.println("***Good-Turing smoothing for bigrams started***");
-			for (Pair<String, String> bGram: bgs.getAll())
-				out.write("{" + bGram.getFirst() + "," + bGram.getSec() + "}:" + bgs.getBgFreq(bGram) + "\n");
-			System.out.println("***Good-Turing smoothing for bigrams completed***");
-			out.close();
-		} 
-		catch (Exception e) {
-			 System.err.println("Smooth Bigram Error: " + e.getMessage());
-		}
+		return bgs;
 	}
 
 	
-	public static double findPerplexity(Unigrams ugs) 
+	public static double findPerplexity(String fileName, Unigrams pUgs, boolean smoothOn) 
 	{
 		double PP = 0;            // Perplexity
 		double probProduct = 1;   // Product of unigram probabilities
 		double totalCount = 0;    // Size of corpus
+		double prob = 0;
 		
-		for (String uGram: ugs.getAll()) {
-			probProduct *= 1 / ugs.getFreq(uGram);
-			totalCount += 1;
+		Vector<String> vecTokens = new Vector<String>();
+		
+		Unigrams ugs = new Unigrams(pUgs);
+		
+		if (smoothOn)
+			ugs = new Unigrams(smoothGoodTuring(pUgs));
+		
+		try {
+			Scanner scanner = new Scanner(new FileInputStream(fileName));
+			while (scanner.hasNextLine()) 
+			{  
+				String[] inputTokens = SimpleTokenizer.INSTANCE.tokenize(scanner.nextLine());
+
+				for (String token: inputTokens) {
+					if(ugs.contains(token))
+						vecTokens.add(token);
+					totalCount++;
+				}
+			}
+			
+			for (String s: vecTokens) {
+				prob = ugs.getFreq(s);
+				probProduct += Math.log(1/prob); 
+			}
+			
+			PP = Math.exp(probProduct/totalCount);
+			
+			return PP;
+		} 
+		catch (FileNotFoundException e) {
+			e.printStackTrace();
 		}
 		
-		//PP = Math.pow(probProduct, 1/totalCount);
-		PP = Math.exp(Math.log(probProduct)/totalCount);
-		
-		return PP;
+		return 0;
 	}
 	
-	public static double findPerplexity(Bigrams bgs) 
+	public static double findPerplexity(String fileName, Bigrams pBgs, boolean smoothOn) 
 	{
-		double PP = 0;              // Perplexity
-		double probProduct = 1;     // Product of bigram probabilities
-		double totalCount = 0;      // Size of corpus
+		double PP = 0;            // Perplexity
+		double probProduct = 1;   // Product of bigram probabilities
+		double totalCount = 0;    // Size of corpus
+		double prob = 0;
 		
-		for (Pair<String, String> bGram: bgs.getAll()) {
-			probProduct *= 1 / bgs.getBgFreq(bGram);
-			totalCount += 1;
+		Vector<Pair<String, String>> vecTokens = new Vector<Pair<String, String>>();
+		
+		Bigrams bgs = new Bigrams(pBgs);
+		
+		if (smoothOn)
+			bgs = new Bigrams(smoothGoodTuring(pBgs));
+		
+		try {
+			Scanner scanner = new Scanner(new FileInputStream(fileName));
+			String curTok, lastTok = "<s>";
+			while (scanner.hasNextLine()) 
+			{  
+				String[] inputTokens = SimpleTokenizer.INSTANCE.tokenize(scanner.nextLine());
+				for (String token: inputTokens) {
+					curTok = token;
+					Pair<String, String> bGram = new Pair<String, String>(lastTok, curTok);
+					
+					if(bgs.containsBg(bGram))
+						vecTokens.add(bGram);
+					
+					lastTok = curTok;
+				}
+				totalCount+=inputTokens.length;
+			}
+			
+			totalCount++;
+			
+			for (Pair<String, String> bGram: vecTokens) {
+				prob = bgs.getBgFreq(bGram);
+				probProduct += Math.log(1/prob); 
+			}
+			
+			PP = Math.exp(probProduct/totalCount);
+			
+			return PP;
+		}
+		catch (FileNotFoundException e) {
+			e.printStackTrace();
 		}
 		
-		//PP = Math.pow(probProduct, 1/totalCount);
-		PP = Math.exp(Math.log(probProduct)/totalCount);
-		
-		return PP;
+		return 0;
 	}
 
 	public static void emailPrediction() 
@@ -602,7 +748,7 @@ public class Ngrams {
 		System.out.println("Perplexity(bigram)  = " + findPerplexity(bgs));
 	}*/
 	
-	//jma342 - Feb25th 2:00am -- jamaal's main for debuggin while building random sentence generator
+	/*//jma342 - Feb25th 2:00am -- jamaal's main for debuggin while building random sentence generator
 	public static void main(String[] args) 
 	{
 		Tokenizer tokens = new Tokenizer();
@@ -639,5 +785,71 @@ public class Ngrams {
 		randomSentenceTrigrams(ugs,bgs,tgs,tokSize);
 		
 	}
+*/	
+	//yb85 - Feb28th 2:00am -- yerzhan's main for debugging smoothing and perplexity
+	public static void main(String[] args) 
+	{
+		Bigrams bgs = new Bigrams();
+		Unigrams ugs= new Unigrams();
+		Tokenizer tokens = new Tokenizer();
+		Vector<String> toksV = new Vector<String>();
+		
+		toksV = tokens.tokenize("TrainingData\\DS3_train.txt");
+		
+//		String[] toks= 
+//		{
+//				"the", "fat", "the", "fat", "friend", "ate",
+//				"twice", "and", "ate", "twice", "and", "ate", "twice"
+//		};
+//		
+//		for(String s: toks)
+//		{
+//			toksV.add(s);	
+//		}
+		
+		int tokSize= toksV.size();
+	
+		indexText(toksV, bgs, ugs);
+		
+//		for(String p: ugs.unigramHT.keySet())
+//		{
+//			System.out.print(p);
+//			System.out.println(ugs.getCount(p));
+//	
+//		}
+//		
+		setFreqs(tokSize, bgs, ugs);
+//		System.out.println("unigrams");
+//		
+//
+//		for(Pair<Integer, Double> p: ugs.unigramHT.values())
+//		{
+//			System.out.println(p.getFirst()+ " , freq: "+ p.getSec());
+//		}		
+//		
+//
+//		System.out.println("bigrams");
+//		for(Pair<String, String> bg: bgs.getAll())
+//		{
+//			System.out.println("for " + bg.toString() + "count: " + bgs.getBgCount(bg) + " and freq: " + bgs.getBgFreq(bg));
+//		}
+//		
+//		for (String prefix: bgs.prefixHT.keySet())
+//		{
+//			System.out.print("bigram set for prefix: "+ prefix + " is:");
+//			for (Pair<String, String> bg: bgs.prefixHT.get(prefix))
+//			{
+//				System.out.println(bg.toString());
+//			}
+//		}
+		
+		  //Testing perplexity for given unigrams and bigrams
+		 
+		System.out.println("Perplexity(unigram-smooth) = " + findPerplexity("TrainingData\\DS3_train.txt", ugs, true));
+		System.out.println("Perplexity(unigram)        = " + findPerplexity("TrainingData\\DS3_train.txt", ugs, false));
+		System.out.println("Perplexity(bigram-smooth)  = " + findPerplexity("TrainingData\\DS3_train.txt", bgs, true));
+		System.out.println("Perplexity(bigram)         = " + findPerplexity("TrainingData\\DS3_train.txt", bgs, false));
+	}
+
 
 }

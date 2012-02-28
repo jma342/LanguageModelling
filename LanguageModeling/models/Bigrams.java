@@ -19,6 +19,21 @@ public class Bigrams {
 	 public Map<Pair<String, String>, Pair<Integer, Double>> bigramHT = new HashMap<Pair<String, String>, Pair<Integer, Double>>();
 	 public Map<String, HashSet<Pair<String, String>>> prefixHT = new HashMap<String, HashSet<Pair<String, String>>>();
 	 
+	//yb85 - Feb 27th added to faciliate smoothing
+	 Bigrams() {
+	 }
+	 
+	 Bigrams(Bigrams bgs) {
+		 for (Pair<String, String> bGram: bgs.getAll()) {
+			 if (!this.containsBg(bGram)) {
+				 this.addNew(bGram);
+			 	 this.setCount(bGram, bgs.getBgCount(bGram));
+			 	 this.setFreq(bGram, bgs.getBgFreq(bGram));
+			 }
+		 }
+	 }
+	//yb85 - Feb 27th added to faciliate smoothing
+	 
 	 //return 0 if bigram is not in the table
 	 public int getBgCount(Pair<String, String> bg)
 	 {
@@ -102,6 +117,19 @@ public class Bigrams {
 			System.out.println("failure in setting frequency, likwlt because value could not be found");
 		}
 
+	}
+	
+	//yb85 - Feb 27th added to faciliate smoothing
+	private void setCount(Pair<String, String> bg, int count) {
+		double freq;
+		try {
+			freq = bigramHT.get(bg).getSec();
+			Pair<Integer, Double> bgVal = new Pair<Integer, Double>(count, freq);
+			bigramHT.put(bg, bgVal);
+		}
+		catch (NullPointerException e) {
+			System.out.println("failure in setting count, likwlt because value could not be found");
+		}
 	}
 	
 	//this table used in random sentence generation and email prediction. Filled in indexText method

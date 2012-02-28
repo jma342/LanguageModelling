@@ -13,7 +13,20 @@ public class Unigrams {
 	/**
 	 * @param args
 	 */
-	 
+	//yb85 - Feb 27th added to faciliate smoothing
+	Unigrams() {
+	}
+	
+	Unigrams(Unigrams ugs) {
+		for (String uGram: ugs.getAll())
+			if (!this.contains(uGram)) {
+				this.addNew(uGram);
+				this.setCount(uGram, ugs.getCount(uGram));
+				this.setFreq(uGram, ugs.getFreq(uGram));
+			}
+	}
+	//yb85 - Feb 27th added to faciliate smoothing
+	
 	public boolean contains(String w) 
 	{
 		return unigramHT.containsKey(w);
@@ -96,6 +109,21 @@ public class Unigrams {
 		unigramHT.put(w, ugVal);
 	 }
 	 
+	//yb85 - Feb 27th added to faciliate smoothing
+	private void setCount(String w, int count) {
+		Pair<Integer, Double> ugVal;
+		double freq;
+		
+		try {
+			freq = unigramHT.get(w).getSec();
+		}
+		catch (NullPointerException e) {
+			System.out.println("****Error for " + w + " in count setting");
+			freq = 0;
+		}
+		ugVal = new Pair<Integer, Double>(count, freq);
+		unigramHT.put(w, ugVal);
+	}
 	public static void main(String[] args) 
 	{
 		// TODO Auto-generated method stub
