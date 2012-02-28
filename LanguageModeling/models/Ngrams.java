@@ -32,23 +32,35 @@ public class Ngrams {
 	 * takes a an array of strings, and empty instances of Bigrams and Unigrams.
 	 * Returns the two Bigrams and Unigrams objects with bigrams and unigrams counted, 
 	 *     but frequencies set to 0
+	 *     
+	 *     jma342 - updated to build trigrams
 	 */
-	public static void indexText(Vector<String> toks, Bigrams bg, Unigrams ug)
+	public static void indexText(Vector<String> toks, Trigrams tg,Bigrams bg, Unigrams ug)
 	{
 		int tlength= toks.size();
 		String cur= toks.elementAt(0);
-		String last= "<s>";   //fix when we figure out start tokens once we set tokenized array
+		String curLast= "<s>";   //jma342 - used to hold the current last token
+		String prevLast = "<s>";//jma342 - used to hold the previous last token in relation to trigram
+		
 		ug.addNew(cur);
-		ug.addNew(last);
-		Pair<String, String> firstBg= new Pair<String, String>(last, cur);
+		ug.addNew(curLast);
+		
+		Pair<String, String> firstBg= new Pair<String, String>(prevLast, cur);
+		
 		bg.addNew(firstBg);
-		last= cur;
+		
+		Triple<String,String,String> firstTg = new Triple<String,String,String>(curLast,prevLast,cur);
+		
+		tg.addNew(firstTg);
+		
+		curLast = prevLast;
+		prevLast= cur;
+		
 		for (int i= 1; i<tlength; i++)
 		{
 			cur= toks.elementAt(i);
 			
-			
-			if (!cur.equals("~"))  //everything else in this loop skips ~, including last element  
+			if (!cur.equals("~"))  //everything else in this loop skips ~, including curLast element  
 			{ 
 				//jma342 - Feb 27th - this ensures that the following punctuation marks are only counted
 				//when they terminate a sentence. Prevents abbreviations from being
@@ -57,26 +69,43 @@ public class Ngrams {
 						(!cur.equals(".") && !cur.equals("?") && !cur.equals("!")))	
 				{ 
 					
-				  Pair<String, String> loopBg= new Pair<String, String>(last, cur);
-				  //three cases. 1) bigram has been seen
-				  if (bg.containsBg(loopBg))
+				  Pair<String, String> loopBg= new Pair<String, String>(prevLast, cur);
+				  Triple<String,String,String> loopTg = new Triple<String,String,String>(curLast,prevLast,cur);
+				  
+				  //jma342---five cases. 1) trigram has been seen
+				  if(tg.containstg(loopTg))/*jma342 - Feb 27th - if the trigram is seen then the bigrams and 
+				  								unigrams within the trigram have also been seen*/
 				  {
+					  tg.updateSeen(loopTg);
 					  bg.updateSeen(loopBg);
 					  ug.updateSeen(cur);
 				  } 
-				  //2) word seen, but not bigram
+				  //2) jma342---bigram seen, but not trigram
 				  else
 				  { 
-					  if (ug.contains(cur))
+					  //3) jma342---add new trigram, update bigram and unigram
+					  if (bg.containsBg(loopBg))
 				  		{
-						  bg.addNew(loopBg);
+						  tg.addNew(loopTg);
+						  bg.updateSeen(loopBg);
 						  ug.updateSeen(cur);
 						} 
-				  //3) new word entirely
 					  else
 					  {
-						  ug.addNew(cur);
-						  bg.addNew(loopBg); 
+						  //4) jma342---new bigram/trigram update unigram
+						  if (ug.contains(cur))
+					  		{
+							  tg.addNew(loopTg);
+							  bg.addNew(loopBg);
+							  ug.updateSeen(cur);
+							} 
+						  //5) jma342--- new word,bigram and unigram
+						  else
+						  {
+							  ug.addNew(cur);
+							  bg.addNew(loopBg);
+							  tg.addNew(loopTg);
+						  } 
 					  } 
 				  }
 				  
@@ -84,23 +113,24 @@ public class Ngrams {
 				  //be used to be the first word in the subsequent bigram
 				  if ((cur.equals(".") || cur.equals("?") || cur.equals("!")))
 				  {
-					  last= "<s>";
+					  prevLast = curLast= "<s>";
 					  
 					  //this token needs to be updated within the unigram
-					  if (ug.contains(last))
+					  if (ug.contains(curLast))
 					  {
-						ug.updateSeen(last);
+						ug.updateSeen(curLast);
 					  } 
 					
 					  else
 					  { 
-						ug.addNew(last);
+						ug.addNew(curLast);
 					  } 
 				  
 				  }
 				  else
-				  {
-					  last= cur;
+				  {	
+					  curLast = prevLast;
+					  prevLast= cur;
 				  }
 				}//end if
 			}//end if
@@ -111,7 +141,7 @@ public class Ngrams {
 	 * -recquires that instances of Bigrams and Unigrams were filled using indexText method
 	 * -sets the frequency field in HT entries
 	 */
-	public static void setFreqs(int tokSize, Bigrams bgs, Unigrams ugs)
+	public static void setFreqs(int tokSize, Trigrams tgs,Bigrams bgs, Unigrams ugs)
 	{
 		//set unigram HT entries for frequency, calculated by normalzing UG count by number of tokens
 		for(String uGram: ugs.getAll())
@@ -129,6 +159,33 @@ public class Ngrams {
 			int pcount= ugs.getCount(bGram.getFirst());  //sets p count to count of prefix from unigram table
 			double bfreq= ((double)bcount)/pcount;
 			bgs.setFreq(bGram, bfreq);
+		}	
+		
+		//jma342---set trigram HT entries for frequency, 
+		//calculated by normalizing TG count by prefix count
+		for(Triple<String, String,String> tGram: tgs.getAll())
+		{
+			int tcount= tgs.getTgCount(tGram);
+			int pcount = 0;
+			
+			//jma342 - the double sentence tokens are used to facilitate the trigram however
+			//the counts for two beginning sentence tokens is equivalent to the count of one
+			//beginning sentence token which can be taken from the unigram
+			if(tGram.getFirst() == "<s>" && tGram.getSec() == "<s>")
+			{
+				pcount= ugs.getCount("<s>");
+			}
+			else
+			{
+				Pair<String,String> tgPrefix = new Pair<String,String>(tGram.getFirst(),tGram.getSec());
+				
+				pcount= bgs.getBgCount(tgPrefix);  //sets p count to count of prefix from bigram table
+			}
+			
+			
+			double tfreq= ((double)tcount)/pcount;
+			
+			tgs.setFreq(tGram, tfreq);
 		}	
 	}
 
@@ -246,6 +303,79 @@ public class Ngrams {
 		}
 		
 	}
+	
+	//jma342 - Feb 27th 11:16 PM
+	public static void randomSentenceTrigrams(Unigrams ugs,Bigrams bgs,Trigrams tgs,int corpusSize) 
+	{
+		Random generator = new Random();
+		
+		Vector<String> randomSentence = new Vector<String>();
+		
+		int rangeUpperBound = 0;//holds the count value of the last word
+		
+		String firstWord = "<s>";//initialised to beginning sentence token
+		String secondWord = "<s>";//intialised to beignning sentence token
+		
+		Pair<String,String> prefixTG = new Pair<String,String>(firstWord,secondWord);
+		
+		//jma342 - feb 27 the bigram count for the first word,second word is used to normalise
+		//the counts of its trigrams. Therefore generating the random number
+		//bounded by the bigram count is ideal. However even though the trigram has
+		//two beginning sentence tokens this count is still governed by the occurence of 
+		//a single beginning sentence token which is tracked by the unigram. Hence the first
+		//set of random numbers is generated based on the count of the beginning sentence token.
+		int randomNumber = generator.nextInt(ugs.unigramHT.get(firstWord).getFirst()) + 1;
+		
+		//loops through the bigram and generaters random sentence until
+		//'.','!','?' is reached
+		do
+		{
+			for(Triple<String,String,String> tgSet: tgs.prefixHT.get(prefixTG))
+			{
+				//the count value of the last word is added to the count value
+				//of the current word to form the upperbound of the current word
+				if(randomNumber <= ((tgs.trigramHT.get(tgSet).getFirst())
+						+ rangeUpperBound))
+				{
+					//if key is found based on the random number
+					//being less than its upper found
+					//the search ends and a new random number is generated
+					//for a new search
+					randomSentence.add(firstWord);
+					
+					firstWord = secondWord;
+					secondWord = tgSet.getThird();
+					//firstWord = tgSet.getThird();//sets first word to be second word of pairing chosen
+					
+					break;
+				}
+				
+				//the count value of the current word is set here as it
+				//will be seen as the last word for the next iteration of the loop
+				
+				rangeUpperBound += (tgs.trigramHT.get(tgSet).getFirst());
+				
+			}
+			
+			rangeUpperBound = 0;
+			prefixTG = new Pair<String,String>(firstWord,secondWord);
+			randomNumber = generator.nextInt(bgs.bigramHT.get(prefixTG).getFirst()) + 1;
+		
+			/*the random sentence generator terminates on the second word being a terminator
+			 * because no trigram will exist with a sentence terminator at the beginning or in the middle
+			 */
+		} while(!secondWord.equals(".") && !secondWord.equals("!") && !secondWord.equals("?"));
+		
+		randomSentence.add(firstWord);//add the word before the sentence terminator
+		randomSentence.add(secondWord);//add the sentence terminator
+		
+		for(int count = 0; count < randomSentence.size();count++)
+		{
+			System.out.print(randomSentence.elementAt(count) + " ");
+		}
+		
+	}
+
 
 	// Good-Turing smoothing method for unigrams
 	public static void smoothGoodTuring(Unigrams ugs) 
@@ -395,7 +525,7 @@ public class Ngrams {
 		//TODO: E-mail Prediction
 	}
 
-	public static void main(String[] args) 
+/*	public static void main(String[] args) 
 	{
 		//toks = input.tokenize();
 		Tokenizer tokens = new Tokenizer();
@@ -416,11 +546,13 @@ public class Ngrams {
 		
 		Bigrams bgs= new Bigrams();
 		Unigrams ugs= new Unigrams();
+		Trigrams tgs = new Trigrams();
+		
 		int tokSize= toksV.size();
 		System.out.println("toks in main method are: " + tokSize);
 		
 	
-		indexText(toksV, bgs, ugs);
+		indexText(toksV, tgs,bgs, ugs);
 		
 		for(String p: ugs.unigramHT.keySet())
 		{
@@ -429,7 +561,7 @@ public class Ngrams {
 	
 		}
 		
-		setFreqs(tokSize, bgs, ugs);
+		setFreqs(tokSize, tgs,bgs, ugs);
 		System.out.println("unigrams");
 		
 
@@ -455,68 +587,42 @@ public class Ngrams {
 		}
 		
 		
-		/*Testing Good-Turing smoothing alogrithm for unigrams and bigrams
+		Testing Good-Turing smoothing alogrithm for unigrams and bigrams
 		 *  Smoothed data for unigrams and bigrams in text files such as:
 		 *  smooth-ug.txt
-		 *  smooth-bg.txt*/
+		 *  smooth-bg.txt
 		 
 		smoothGoodTuring(ugs);
 		smoothGoodTuring(bgs);
 		
 		
-		 /* Testing perplexity for given unigrams and bigrams*/
+		  Testing perplexity for given unigrams and bigrams
 		 
 		System.out.println("Perplexity(unigram) = " + findPerplexity(ugs));
 		System.out.println("Perplexity(bigram)  = " + findPerplexity(bgs));
-	}
+	}*/
 	
-/*	//jma342 - Feb25th 2:00am -- jamaal's main for debuggin while building random sentence generator
+	//jma342 - Feb25th 2:00am -- jamaal's main for debuggin while building random sentence generator
 	public static void main(String[] args) 
 	{
 		Tokenizer tokens = new Tokenizer();
 		Vector<String> toksV= new Vector<String>();
 		
 		toksV = tokens.tokenize("TrainingData\\DS4_train.txt");
-		//toksV = tokens.tokenize("smallParse.txt");
 		
 		
 		Bigrams bgs= new Bigrams();
 		Unigrams ugs= new Unigrams();
+		Trigrams tgs = new Trigrams();
+		
 		int tokSize= toksV.size();
 		//System.out.println("toks in main method are: " + tokSize);
-
-		int a = 0;
 		
-		indexText(toksV, bgs, ugs);
-		
-		//jma342 - feb 25 1:40AM -- no need to see unigram words and counts
-		for(String p: ugs.unigramHT.keySet())
-		{
-			System.out.print(p);
-			System.out.println(ugs.getCount(p));
-	
-		}
-		
-		setFreqs(tokSize, bgs, ugs);
+		indexText(toksV, tgs,bgs, ugs);
+		setFreqs(tokSize, tgs,bgs, ugs);
 		
 		System.out.println();
 		System.out.println("unigrams");
-		
-		//jma342 - feb 25 1:40AM -- removed for the for loop subsequent
-		for(Pair<Integer, Double> p: ugs.unigramHT.values())
-		{
-			System.out.println(p.getFirst()+ " , freq: "+ p.getSec());
-		}		
-		
-		int iterator = 0;
-		int overallCount = 0;
-		for(String p: ugs.unigramHT.keySet())
-		{
-			System.out.print(iterator++ + ". " + p);
-			System.out.println(" Count " + ugs.unigramHT.get(p).getFirst() + ", Freq: " + String.format("%.2g%n", ugs.unigramHT.get(p).getSec()));
-			overallCount +=ugs.unigramHT.get(p).getFirst();
-	
-		}
 		
 		//jma342 -- feb 25th 2:00AM  -- ensuring that token counts total up to number of tokens
 		//System.out.println(overallCount);
@@ -527,7 +633,11 @@ public class Ngrams {
 		System.out.println("bigrams");
 		System.out.println("");
 		randomSentenceBigrams(ugs,bgs,tokSize);
+		System.out.println("");
+		System.out.println("trigrams");
+		System.out.println("");
+		randomSentenceTrigrams(ugs,bgs,tgs,tokSize);
 		
 	}
-*/
+
 }

@@ -100,15 +100,8 @@ public class Tokenizer
 		fileName = file;
 		
 		setSentenceModel();
-		System.out.println("detecting Sentences");
 		detectSentences();
-		System.out.println("Sentences detected");
-		
-		System.out.println(" ");
-		
-		System.out.println("tokenising Sentences");
 		tokeniseSentences();
-		System.out.println("Sentences tokenised");
 		
 		return tokens;
 		
